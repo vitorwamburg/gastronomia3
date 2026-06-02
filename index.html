@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Culinário - Técnicas e Sabores do Mundo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* PALETA DE CORES (Tons Quentes/Culinários) */
+        :root {
+            --bg-color: #fff7ed;
+            --card-bg: #ffffff;
+            --primary: #ea580c;
+            --primary-dark: #c2410c;
+            --success: #16a34a;
+            --error: #dc2626;
+            --text-main: #292524;
+            --text-light: #78716c;
+            --border-radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Nunito', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: 0 20px 40px rgba(234, 88, 12, 0.08);
+            overflow: hidden;
+            position: relative;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* BARRA DE PROGRESSO */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: #ffedd5;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        /* HEADER */
+        .header {
+            padding: 40px 50px 20px;
+            text-align: center;
+        }
+
+        .topic-badge {
+            display: inline-block;
+            background: #ffedd5;
+            color: var(--primary-dark);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        /* TELAS */
+        .screen {
+            display: none;
+            flex-direction: column;
+            flex-grow: 1;
+            padding: 20px 50px 50px;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* TELA DE INTRODUÇÃO */
+        #intro-screen {
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 40px;
+        }
+
+        .intro-title {
+            font-family: 'Lora', serif;
+            font-size: 44px;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .intro-title span {
+            color: var(--primary);
+        }
+
+        .btn-main {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 30px;
+            box-shadow: 0 10px 20px rgba(234, 88, 12, 0.2);
+        }
+
+        .btn-main:hover {
+            background: var(--primary-dark);
+            transform: translateY(-3px);
+        }
+
+        /* TELA DE PERGUNTAS */
+        .question-text {
+            font-family: 'Lora', serif;
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 40px;
+            color: var(--text-main);
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 700px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .option-btn {
+            background: #fdf8f6;
+            border: 2px solid #ffedd5;
+            padding: 20px 25px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-family: 'Nunito', sans-serif;
+            color: var(--text-main);
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            background: white;
+            transform: scale(1.02);
+        }
+
+        .option-btn span {
+            font-weight: 700;
+            color: var(--primary);
+            margin-right: 15px;
+            font-size: 20px;
+        }
+
+        .option-btn.correct {
+            background: #f0fdf4 !important;
+            border-color: var(--success) !important;
+            color: var(--success);
+        }
+
+        .option-btn.wrong {
+            background: #fef2f2 !important;
+            border-color: var(--error) !important;
+            color: var(--error);
+        }
+
+        /* MODAL DE FEEDBACK */
+        .feedback-panel {
+            position: absolute;
+            bottom: -100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+            padding: 40px 50px;
+            border-radius: 30px 30px 0 0;
+            transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .feedback-panel.show {
+            bottom: 0;
+        }
+
+        .feedback-title {
+            font-family: 'Lora', serif;
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        .feedback-text {
+            font-size: 18px;
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-bottom: 30px;
+            max-width: 800px;
+        }
+
+        /* TELA FINAL */
+        .score-display {
+            font-family: 'Lora', serif;
+            font-size: 72px;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+
+        /* RESPONSIVIDADE */
+        @media (max-width: 768px) {
+            .app-container { min-height: 100vh; border-radius: 0; }
+            .intro-title { font-size: 32px; }
+            .question-text { font-size: 22px; }
+            .option-btn { font-size: 16px; padding: 15px; }
+            .screen { padding: 20px; }
+            .feedback-panel { padding: 30px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <div id="intro-screen" class="screen active">
+        <div class="topic-badge">Gastronomia Mundial</div>
+        <h1 class="intro-title">Quiz de Preparo Técnico:<br><span>Técnicas, Woks e Sabores Globais</span></h1>
+        <p style="color: var(--text-light); font-size: 18px; max-width: 700px; margin-top: 10px;">
+            Domine as bases: do controlo de temperatura na wok, pastas cremosas do Médio Oriente, os clássicos africanos, massas frescas italianas e os segredos do fogo e da cozedura!
+        </p>
+        <button class="btn-main" onclick="startQuiz()">Começar o Quiz (50 Questões)</button>
+    </div>
+
+    <div id="quiz-screen" class="screen">
+        <div class="header">
+            <div class="topic-badge" id="question-counter">Questão 1 de 50</div>
+        </div>
+        <h2 class="question-text" id="question-text">A carregar pergunta...</h2>
+        <div class="options-list" id="options-container">
+            </div>
+    </div>
+
+    <div id="result-screen" class="screen" style="text-align: center; justify-content: center; align-items: center;">
+        <div class="topic-badge">Avaliação Concluída</div>
+        <div class="score-display" id="final-score">0/50</div>
+        <h2 style="font-family: 'Lora'; font-size: 28px; margin-bottom: 15px;" id="result-title">Bom trabalho!</h2>
+        <p style="color: var(--text-light); font-size: 18px; max-width: 600px;" id="result-message"></p>
+        <button class="btn-main" onclick="location.reload()">Jogar Novamente</button>
+    </div>
+
+    <div id="feedback-panel" class="feedback-panel">
+        <h3 class="feedback-title" id="feedback-title">Resposta</h3>
+        <div class="feedback-text" id="feedback-text">Explicação...</div>
+        <button class="btn-main" style="margin-top: 0;" id="next-btn" onclick="nextQuestion()">Próxima Questão</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        // --- BLOCO 1: FRANGO XADREZ ---
+        {
+            topic: "Frango Xadrez",
+            q: "O Frango Xadrez tem origem associada a qual culinária?",
+            options: ["Japão", "China", "Tailândia", "Coreia", "Vietname"],
+            correct: 1,
+            exp: "Prato inspirado na culinária chinesa. É baseado em técnicas de wok e é muito difundido mundialmente."
+        },
+        {
+            topic: "Frango Xadrez",
+            q: "Qual combinação representa corretamente o Frango Xadrez?",
+            options: ["Frango, pimentos, cebola e amendoim", "Carne de vaca, batata e leite", "Peixe, limão e manteiga", "Lentilhas, arroz e cebola", "Massa, queijo e natas"],
+            correct: 0,
+            exp: "A base clássica exige frango em cubos, pimentos, cebola e amendoim. O contraste de textura é essencial."
+        },
+        {
+            topic: "Frango Xadrez",
+            q: "Qual é a sequência correta de preparo do Frango Xadrez?",
+            options: ["Cozer tudo junto em lume brando", "Adicionar molho antes de selar o frango", "Selar o frango → adicionar vegetais → finalizar com molho", "Ferver os ingredientes", "Assar tudo no forno"],
+            correct: 2,
+            exp: "Fluxo técnico na wok: selagem rápida (alta temperatura), os vegetais entram depois e o molho finaliza e integra tudo."
+        },
+        {
+            topic: "Frango Xadrez",
+            q: "Qual erro subtil compromete o Frango Xadrez?",
+            options: ["Usar pimentos", "Saltear em lume forte", "Colocar todos os ingredientes de uma vez na panela", "Usar frango", "Adicionar molho no final"],
+            correct: 2,
+            exp: "Pegadinha clássica de wok: o excesso de ingredientes causa uma queda de temperatura, fazendo com que cozinhem no próprio vapor em vez de saltear."
+        },
+        {
+            topic: "Frango Xadrez",
+            q: "O que acontece se o frango não for selado corretamente antes do molho?",
+            options: ["Fica mais crocante", "Liberta água e fica sem textura e sem sabor marcante", "Cozinha mais rápido", "Fica mais doce", "Não altera o prato"],
+            correct: 1,
+            exp: "A selagem é crucial para criar sabor (reação de Maillard) e reter a suculência. Sem isso, o frango fica com aspeto de cozido e o prato perde profundidade."
+        },
+
+        // --- BLOCO 2: GOBI MASALA ---
+        {
+            topic: "Gobi Masala",
+            q: "O Gobi Masala é um prato tradicional de qual país?",
+            options: ["Tailândia", "Índia", "Japão", "China", "Indonésia"],
+            correct: 1,
+            exp: "Prato clássico da culinária indiana. 'Gobi' significa couve-flor e 'Masala' refere-se à mistura de especiarias."
+        },
+        {
+            topic: "Gobi Masala",
+            q: "Qual combinação representa corretamente o Gobi Masala?",
+            options: ["Couve-flor, tomate, cebola e garam masala", "Batata, queijo e natas", "Arroz, peixe e limão", "Lentilhas, arroz e cebola", "Frango, molho de soja e legumes"],
+            correct: 0,
+            exp: "A base do prato tem a couve-flor como protagonista, apoiada numa base de tomate e cebola, sendo intensamente aromatizada com especiarias (garam masala)."
+        },
+        {
+            topic: "Gobi Masala",
+            q: "Qual é a sequência correta de preparo do Gobi Masala?",
+            options: ["Cozer a couve-flor em água → servir", "Misturar tudo cru", "Refogar os temperos → adicionar o tomate → incorporar a couve-flor → cozinhar", "Assar tudo junto", "Fritar apenas a couve-flor"],
+            correct: 2,
+            exp: "Fluxo técnico: desenvolver a base aromática (refogando), criar o molho e depois deixar a couve-flor cozinhar absorvendo todo o sabor."
+        },
+        {
+            topic: "Gobi Masala",
+            q: "Qual erro subtil compromete o Gobi Masala?",
+            options: ["Usar garam masala", "Refogar a cebola", "Adicionar as especiarias sem as refogar corretamente", "Usar tomate", "Cozer a couve-flor"],
+            correct: 2,
+            exp: "Pegadinha clássica da cozinha indiana: as especiarias precisam de ser refogadas ('tostadas') para ativar os seus óleos essenciais. Sem isso, deixam um sabor desagradável e 'cru'."
+        },
+        {
+            topic: "Gobi Masala",
+            q: "O que acontece se a couve-flor passar do ponto de cozedura?",
+            options: ["Fica mais saborosa", "Perde a textura e vira um preparo mole e sem estrutura", "Fica mais crocante", "Intensifica as especiarias", "Não muda nada"],
+            correct: 1,
+            exp: "O controlo da cozedura é essencial: o ponto ideal é macia, mas estruturada. Errar o tempo faz o vegetal desmanchar, perdendo a identidade tátil do prato."
+        },
+
+        // --- BLOCO 3: CHOW FAN ---
+        {
+            topic: "Chow Fan",
+            q: "O Chow Fan é um prato tradicional de qual culinária?",
+            options: ["Japão", "Coreia", "China", "Tailândia", "Vietname"],
+            correct: 2,
+            exp: "Prato típico da culinária chinesa, baseado em arroz frito, onde a técnica de uso da panela wok é essencial."
+        },
+        {
+            topic: "Chow Fan",
+            q: "Qual combinação representa corretamente o Chow Fan?",
+            options: ["Massa, carne e legumes", "Arroz cozido, ovo, cebolinho e carne ou camarão", "Batata, leite e manteiga", "Lentilhas, arroz e cebola", "Frango, caril e leite de coco"],
+            correct: 1,
+            exp: "A base clássica do prato consiste em arroz já cozido, uma proteína, ovo e cebolinho. O arroz é o grande protagonista."
+        },
+        {
+            topic: "Chow Fan",
+            q: "Qual é a sequência correta de preparo do Chow Fan?",
+            options: ["Cozer o arroz durante o preparo", "Misturar tudo frio", "Saltear os ovos → adicionar a proteína → incorporar o arroz cozido → finalizar com temperos", "Ferver tudo num tacho", "Assar os ingredientes"],
+            correct: 2,
+            exp: "Fluxo técnico: preparo rápido em alta temperatura com montagem progressiva e organizada na wok."
+        },
+        {
+            topic: "Chow Fan",
+            q: "Qual erro subtil compromete o resultado do Chow Fan?",
+            options: ["Usar arroz cozido", "Saltear em lume forte", "Usar arroz recém-cozido e ainda húmido", "Adicionar ovo", "Usar cebolinho"],
+            correct: 2,
+            exp: "Pegadinha clássica: o arroz recém-cozido é muito húmido e vai empapar na wok. O correto é usar arroz frio (de preferência do dia anterior) para que os grãos fiquem soltos."
+        },
+        {
+            topic: "Chow Fan",
+            q: "O que acontece se colocar demasiado arroz de uma vez na wok?",
+            options: ["Fica mais crocante", "A temperatura cai e o arroz passa a cozer em vez de fritar", "Cozinha mais rápido", "Fica mais leve", "Não altera o prato"],
+            correct: 1,
+            exp: "A técnica de wok exige uma temperatura alta e constante. O excesso de volume bloqueia o calor, gerando perda térmica; o arroz liberta vapor e coze, arruinando a textura."
+        },
+
+        // --- BLOCO 4: COSTELINHAS BARBECUE ---
+        {
+            topic: "Costelinhas Barbecue",
+            q: "As costelinhas barbecue são um prato tradicional de qual país?",
+            options: ["França", "Japão", "Estados Unidos", "Alemanha", "México"],
+            correct: 2,
+            exp: "É um clássico da culinária americana, muito forte no sul dos EUA, baseado na técnica de cozedura lenta e finalização com molho."
+        },
+        {
+            topic: "Costelinhas Barbecue",
+            q: "Qual combinação representa corretamente o prato?",
+            options: ["Carne de vaca, vinho e batata", "Costelas de porco, sal, pimentão doce e molho barbecue", "Frango, caril e leite de coco", "Peixe, limão e manteiga", "Cordeiro, hortelã e iogurte"],
+            correct: 1,
+            exp: "A base do preparo exige costelas de porco (suínas), um tempero seco (dry rub) com sal e pimentão doce, e o molho barbecue."
+        },
+        {
+            topic: "Costelinhas Barbecue",
+            q: "Qual é a sequência correta de preparação das costelinhas?",
+            options: ["Pincelar o molho → assar rápido → servir", "Temperar → assar lentamente → pincelar o molho → finalizar a caramelizar", "Fritar → assar → molho no início", "Cozer em água → servir", "Assar direto com o molho desde o início"],
+            correct: 1,
+            exp: "O fluxo técnico exige uma cozedura lenta para amaciar a carne, seguida da aplicação do molho no final para uma caramelização controlada."
+        },
+        {
+            topic: "Costelinhas Barbecue",
+            q: "Qual erro subtil compromete o resultado final do prato?",
+            options: ["Assar lentamente", "Usar pimentão doce", "Aplicar o molho barbecue desde o início da cozedura", "Temperar a carne a seco", "Finalizar no forno"],
+            correct: 2,
+            exp: "Pegadinha clássica: o molho barbecue tem níveis elevados de açúcar. Se for aplicado cedo, queima, amarga e impede a cozedura correta da carne."
+        },
+        {
+            topic: "Costelinhas Barbecue",
+            q: "O que acontece se as costelinhas não forem assadas lentamente?",
+            options: ["Ficam mais crocantes", "Ficam duras e com fibras rígidas", "Cozinham mais rápido e melhor", "Ficam mais doces", "Não altera o resultado"],
+            correct: 1,
+            exp: "A cozedura lenta é essencial para quebrar o colagénio e deixar a carne a desfazer-se. Sem o tempo necessário em calor brando, a carne fica extremamente dura e difícil de mastigar."
+        },
+
+        // --- BLOCO 5: POMMES DUCHESSE ---
+        {
+            topic: "Pommes Duchesse",
+            q: "O Pommes Duchesse é um preparo clássico de qual país?",
+            options: ["Itália", "Alemanha", "França", "Espanha", "Bélgica"],
+            correct: 2,
+            exp: "É uma preparação clássica francesa. Trata-se de uma técnica refinada de batata, muito utilizada como guarnição em alta gastronomia."
+        },
+        {
+            topic: "Pommes Duchesse",
+            q: "Qual combination representa corretamente o Pommes Duchesse?",
+            options: ["Batata, leite e queijo", "Batata, manteiga e gemas", "Batata, farinha e ovo inteiro", "Batata, natas e alho", "Batata, azeite e ervas"],
+            correct: 1,
+            exp: "A base técnica exige um puré de batata bem seco, manteiga (para estrutura e sabor) e gemas (para ligação e cor dourada), sem excesso de humidade."
+        },
+        {
+            topic: "Pommes Duchesse",
+            q: "Qual é a sequência correta de preparação?",
+            options: ["Cozer batata → fazer puré seco → incorporar manteiga e gemas → modelar → assar", "Misturar tudo cru → assar no forno", "Fazer puré com leite → modelar → fritar", "Cozer batata → fritar → assar", "Misturar a batata com farinha → cozer em água"],
+            correct: 0,
+            exp: "O fluxo técnico implica remover a humidade da batata, enriquecer com gordura e gemas, modelar perfeitamente com um saco de pasteleiro e levar ao forno para estruturar e dourar."
+        },
+        {
+            topic: "Pommes Duchesse",
+            q: "Qual erro subtil compromete totalmente o resultado do Pommes Duchesse?",
+            options: ["Usar manteiga", "Modelar com saco de pasteleiro", "Fazer um puré muito húmido (com leite em excesso)", "Assar no forno", "Usar gema de ovo"],
+            correct: 2,
+            exp: "Pegadinha clássica: um puré húmido não mantém o formato estriado, perde a estrutura no forno e não doura corretamente. A técnica exige um puré bem seco e firme."
+        },
+        {
+            topic: "Pommes Duchesse",
+            q: "O que acontece se adicionar as gemas com o puré ainda muito quente?",
+            options: ["Melhora a textura e a leveza", "Não altera absolutamente nada", "As gemas podem coagular parcialmente, criando uma textura irregular", "Deixa a crosta mais crocante", "Aumenta consideravelmente o volume"],
+            correct: 2,
+            exp: "Controlo de temperatura: as gemas são sensíveis ao calor. Se as incorporar com o puré a ferver, ocorre uma coagulação precoce (como ovos mexidos), criando grumos e uma textura desagradável."
+        },
+
+        // --- BLOCO 6: BABAGANOUSH ---
+        {
+            topic: "Babaganoush",
+            q: "O babaganoush é um prato tradicional de qual região?",
+            options: ["Sudeste Asiático", "América do Sul", "Médio Oriente", "Europa Oriental", "Norte de África"],
+            correct: 2,
+            exp: "É um clássico do Médio Oriente, muito comum no Líbano e regiões próximas. Consiste numa pasta cremosa à base de beringela."
+        },
+        {
+            topic: "Babaganoush",
+            q: "Qual combinação representa corretamente o babaganoush?",
+            options: ["Beringela, tahine, limão e alho", "Grão-de-bico, tahine e limão", "Batata, manteiga e leite", "Tomate, cebola e carne", "Abacate, limão e coentros"],
+            correct: 0,
+            exp: "A base do prato é a beringela assada (protagonista), o tahine (que dá gordura e corpo), o limão (acidez) e o alho (para o aroma característico)."
+        },
+        {
+            topic: "Babaganoush",
+            q: "Qual é a sequência correta de preparo do babaganoush?",
+            options: ["Misturar tudo cru", "Ferver a beringela e depois bater", "Assar a beringela → extrair a polpa → misturar com tahine, limão e alho", "Fritar a beringela → servir", "Cozer tudo junto num tacho"],
+            correct: 2,
+            exp: "O fluxo técnico exige assar (ou queimar na chama) a beringela para desenvolver o seu sabor fumado, e só depois se deve retirar a polpa e misturar os restantes ingredientes."
+        },
+        {
+            topic: "Babaganoush",
+            q: "Qual erro subtil compromete totalmente o prato?",
+            options: ["Usar limão", "Adicionar alho", "Cozer a beringela em água em vez de a assar", "Misturar bem os ingredientes", "Usar tahine"],
+            correct: 2,
+            exp: "Pegadinha clássica: cozer a beringela em água faz com que esta perca sabor, fique demasiado aguada e nunca chegue a desenvolver a assinatura fundamental do prato: o toque fumado."
+        },
+        {
+            topic: "Babaganoush",
+            q: "O que acontece se não escorrer o excesso de líquido da beringela após assar?",
+            options: ["Fica mais leve", "Não altera o prato em nada", "O babaganoush fica aguado e com o sabor muito diluído", "Fica mais cremoso", "Fica mais ácido"],
+            correct: 2,
+            exp: "Controlo de textura: a beringela retém muita água na sua polpa. Se este líquido não for escorrido ou prensado, a pasta fica com uma textura solta e um sabor fraco e pouco concentrado."
+        },
+
+        // --- BLOCO 7: MUAMBA DE GALINHA ---
+        {
+            topic: "Muamba de Galinha",
+            q: "A Muamba de Galinha é um prato tradicional de qual região?",
+            options: ["Brasil", "Angola", "Portugal", "Moçambique", "Senegal"],
+            correct: 1,
+            exp: "A muamba é um prato típico de Angola, muito associado à culinária tradicional com base em óleo de palma e cozedura lenta."
+        },
+        {
+            topic: "Muamba de Galinha",
+            q: "Qual alternativa representa corretamente a base da Muamba de Galinha?",
+            options: ["Frango, leite de coco, caril e arroz", "Frango, quiabo, óleo de palma e alho", "Carne de vaca, tomate e vinho", "Peixe, batata e farinha", "Grão-de-bico, tahine e limão"],
+            correct: 1,
+            exp: "Base clássica: frango como proteína, quiabo como espessante natural, óleo de palma como gordura principal e alho para aromatizar."
+        },
+        {
+            topic: "Muamba de Galinha",
+            q: "Qual é a sequência correta de preparação tradicional?",
+            options: ["Fritar o frango panado e servir", "Cozer tudo em água e depois temperar", "Marinar → cozer lentamente com óleo de palma → adicionar quiabo → reduzir até engrossar", "Assar o frango no forno com queijo", "Saltear rápido numa wok"],
+            correct: 2,
+            exp: "Processo tradicional: base de cozedura lenta, a gordura do óleo de palma desenvolve sabor, o quiabo entra para dar textura e a redução final concentra o molho."
+        },
+        {
+            topic: "Muamba de Galinha",
+            q: "Qual erro compromete diretamente a identidade da Muamba de Galinha?",
+            options: ["Usar frango", "Usar alho", "Substituir o óleo de palma por óleo neutro", "Usar quiabo", "Cozer lentamente"],
+            correct: 2,
+            exp: "O óleo de palma é estrutural no prato: sem ele, perde a cor, o aroma característico e a sua identidade africana."
+        },
+        {
+            topic: "Muamba de Galinha",
+            q: "Qual o papel do quiabo na Muamba de Galinha?",
+            options: ["Apenas dar sabor", "Apenas dar cor", "Espessamento natural do molho durante a cozedura", "Apenas decorativo", "Substitui o frango"],
+            correct: 2,
+            exp: "O quiabo liberta mucilagem durante a cozedura: ajuda a engrossar o molho naturalmente, dá a textura característica e dispensa espessantes artificiais."
+        },
+
+        // --- BLOCO 8: GNOCCHI AO MOLHO DE LIMÃO ---
+        {
+            topic: "Gnocchi ao Molho de Limão",
+            q: "O gnocchi tem origem mais associada a qual tradição culinária?",
+            options: ["Francesa", "Italiana", "Espanhola", "Japonesa", "Mexicana"],
+            correct: 1,
+            exp: "O gnocchi (nhoque) é um clássico da Itália, especialmente das regiões do norte. É tradicionalmente feito à base de batata e farinha."
+        },
+        {
+            topic: "Gnocchi ao Molho de Limão",
+            q: "Qual alternativa representa corretamente o gnocchi ao molho de limão?",
+            options: ["Batata, farinha, limão e natas", "Arroz, frango, açafrão e feijão-verde", "Massa, tomate e carne picada", "Grão-de-bico, tahine e alho", "Batata, leite de coco e óleo de palma"],
+            correct: 0,
+            exp: "Base do prato: o gnocchi estruturado com batata e farinha, combinado com um molho cremoso e ácido feito de limão e natas."
+        },
+        {
+            topic: "Gnocchi ao Molho de Limão",
+            q: "Qual é a sequência correta de preparação do prato?",
+            options: ["Fritar o gnocchi direto", "Fazer a massa de batata → modelar → cozer até subir → preparar o molho de limão → misturar", "Misturar tudo cru e assar", "Cozer a batata e servir sem modelar", "Fritar e depois ferver em água"],
+            correct: 1,
+            exp: "Fluxo técnico correto: preparar a massa homogénea com batata cozida, modelar, cozer em água fervente até flutuar e incorporar no molho de limão estruturado."
+        },
+        {
+            topic: "Gnocchi ao Molho de Limão",
+            q: "Qual erro compromete gravemente a textura ideal do gnocchi?",
+            options: ["Usar batata", "Usar limão", "Excesso de farinha na massa", "Usar natas", "Cozer em água"],
+            correct: 2,
+            exp: "Pegadinha clássica: adicionar farinha em excesso torna a massa pesada, resultando num gnocchi duro e borrachudo. O ideal é usar o mínimo de farinha necessário para dar liga."
+        },
+        {
+            topic: "Gnocchi ao Molho de Limão",
+            q: "O que indica que o gnocchi atingiu o ponto correto de cozedura?",
+            options: ["Afunda no fundo do tacho", "Fica completamente duro", "Sobe para a superfície da água (flutua)", "Fica com uma tonalidade amarela forte", "Desmancha-se por completo na água"],
+            correct: 2,
+            exp: "Indicador físico: quando o gnocchi sobe e flutua na superfície, significa que a massa cozeu por completo e a sua estrutura interna estabilizou, estando pronto a ser retirado."
+        },
+
+        // --- BLOCO 9: HOMUS (HÚMUS) ---
+        {
+            topic: "Homus (Húmus)",
+            q: "O homus é tradicionalmente associado à culinária de qual região?",
+            options: ["Sudeste Asiático", "Médio Oriente", "América Latina", "Europa Central", "África Ocidental"],
+            correct: 1,
+            exp: "O homus é um clássico do Médio Oriente, muito presente e fundamental em países como o Líbano, Síria e Israel."
+        },
+        {
+            topic: "Homus (Húmus)",
+            q: "Qual alternativa representa corretamente os ingredientes do homus?",
+            options: ["Grão-de-bico, tahine, limão e alho", "Beringela, alho e limão", "Carne picada, tomate e cebola", "Batata, manteiga e gemas", "Abacate, coentros e limão"],
+            correct: 0,
+            exp: "A base clássica exige grão-de-bico bem cozido, tahine (pasta de sésamo), sumo de limão (para a acidez) e alho fresco (para o aroma)."
+        },
+        {
+            topic: "Homus (Húmus)",
+            q: "Qual é a sequência correta de preparação?",
+            options: ["Cozer o grão-de-bico → triturar tudo até formar uma pasta cremosa", "Fritar o grão-de-bico e servir", "Assar todos os ingredientes juntos no forno", "Misturar tudo cru e triturar sem cozer", "Ferver e comer os grãos inteiros"],
+            correct: 0,
+            exp: "O fluxo técnico essencial baseia-se em ter o grão-de-bico bem cozido, que é processado/triturado até obter uma textura lisa, sendo depois ajustado com limão, tahine e alho."
+        },
+        {
+            topic: "Homus (Húmus)",
+            q: "Qual erro compromete de forma mais drástica a textura do homus?",
+            options: ["Usar limão", "Usar alho", "Não cozer bem o grão-de-bico", "Usar tahine", "Triturar no processador"],
+            correct: 2,
+            exp: "Erro crítico: se o grão-de-bico ficar minimamente rijo, a pasta adquire uma textura arenosa, a emulsão falha e o homus fica pesado em vez de leve e cremoso."
+        },
+        {
+            topic: "Homus (Húmus)",
+            q: "Qual fator influencia mais ativamente a obtenção de um homus extremamente cremoso?",
+            options: ["Usar tomate na mistura", "Adicionar farinha de trigo", "Remover a pele do grão-de-bico após a cozedura", "Fritar o alho antes de incorporar", "Usar caldos de carne"],
+            correct: 2,
+            exp: "Técnica profissional: remover a pele (ou casca) de cada grão-de-bico após a cozedura torna a textura imensamente mais lisa, melhora a emulsão com o tahine e cria uma pasta sedosa."
+        },
+
+        // --- BLOCO 10: GALINHA À ZAMBÉZIA ---
+        {
+            topic: "Galinha à Zambézia",
+            q: "A Galinha à Zambézia é um prato tradicional de qual país?",
+            options: ["Angola", "Moçambique", "Brasil", "Portugal", "África do Sul"],
+            correct: 1,
+            exp: "Prato típico de Moçambique, especialmente da região da Zambézia. É muito ligado à culinária costeira, com forte uso de coco e cítricos."
+        },
+        {
+            topic: "Galinha à Zambézia",
+            q: "Qual alternativa representa corretamente a base da Galinha à Zambézia?",
+            options: ["Frango, leite de coco, limão e pimenta", "Frango, óleo de palma e quiabo", "Carne de vaca, vinho e batata", "Peixe, arroz e açafrão", "Grão-de-bico, tahine e alho"],
+            correct: 0,
+            exp: "A base do prato tem o frango como proteína principal, o leite de coco para dar cremosidade, o limão para acidez e frescura, e pimenta (ou piripíri) para uma leve picância."
+        },
+        {
+            topic: "Galinha à Zambézia",
+            q: "Qual é a sequência correta da preparação tradicional?",
+            options: ["Fritar o frango panado e servir", "Cozer tudo junto rapidamente", "Marinar o frango → grelhar ou cozer → preparar o molho de coco → finalizar com limão", "Assar o frango com queijo", "Saltear numa wok com molho de soja"],
+            correct: 2,
+            exp: "Fluxo técnico: a marinada dá um sabor profundo, a cozedura é controlada (geralmente grelhado ou estufado), o molho de coco finaliza o prato e o limão ajusta a acidez."
+        },
+        {
+            topic: "Galinha à Zambézia",
+            q: "Qual erro compromete mais gravemente o equilíbrio do prato?",
+            options: ["Usar frango", "Usar limão", "Ferver em demasia o leite de coco", "Usar pimenta", "Marinar o frango"],
+            correct: 2,
+            exp: "Erro crítico: se o leite de coco for fervido em demasia, pode talhar e perder a sua cremosidade. O sabor fica pesado e com a gordura separada. O ideal é uma cozedura controlada e finalização suave."
+        },
+        {
+            topic: "Galinha à Zambézia",
+            q: "Qual o papel principal da marinada na Galinha à Zambézia?",
+            options: ["Apenas salgar o frango", "Amaciar e infundir sabor antes da cozedura", "Substituir o molho final", "Engrossar o molho", "Fritar a carne"],
+            correct: 1,
+            exp: "A marinada quebra as fibras da carne (amaciando-a), adiciona sabor interno profundo e melhora consideravelmente a suculência do resultado final."
+        }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    function startQuiz() {
+        document.getElementById('intro-screen').classList.remove('active');
+        document.getElementById('quiz-screen').classList.add('active');
+        updateProgress();
+        loadQuestion();
+    }
+
+    function updateProgress() {
+        const progress = ((currentQuestion) / questions.length) * 100;
+        document.getElementById('progress-bar').style.width = `${progress}%`;
+        document.getElementById('question-counter').innerText = `Questão ${currentQuestion + 1} de ${questions.length}`;
+    }
+
+    function loadQuestion() {
+        const qData = questions[currentQuestion];
+        document.getElementById('question-text').innerText = qData.q;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        const letras = ['A', 'B', 'C', 'D', 'E'];
+        
+        qData.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerHTML = `<span>${letras[index]})</span> ${opt}`;
+            btn.onclick = () => checkAnswer(index, btn);
+            container.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selectedIndex, btnElement) {
+        const qData = questions[currentQuestion];
+        const allBtns = document.querySelectorAll('.option-btn');
+        
+        // Desativar botões
+        allBtns.forEach(btn => btn.disabled = true);
+
+        const titleEl = document.getElementById('feedback-title');
+        
+        if (selectedIndex === qData.correct) {
+            btnElement.classList.add('correct');
+            titleEl.innerText = "✅ Correto!";
+            titleEl.style.color = "var(--success)";
+            score++;
+        } else {
+            btnElement.classList.add('wrong');
+            allBtns[qData.correct].classList.add('correct');
+            titleEl.innerText = "❌ Incorreto!";
+            titleEl.style.color = "var(--error)";
+        }
+
+        document.getElementById('feedback-text').innerHTML = `<strong>Explicação:</strong> ${qData.exp}`;
+        
+        if (currentQuestion === questions.length - 1) {
+            document.getElementById('next-btn').innerText = "Ver Resultado Final";
+        }
+
+        // Mostrar Painel
+        document.getElementById('feedback-panel').classList.add('show');
+    }
+
+    function nextQuestion() {
+        document.getElementById('feedback-panel').classList.remove('show');
+        
+        setTimeout(() => {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                updateProgress();
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }, 400); // Tempo para a animação do painel descer
+    }
+
+    function showResults() {
+        document.getElementById('quiz-screen').classList.remove('active');
+        document.getElementById('result-screen').classList.add('active');
+        document.getElementById('progress-bar').style.width = '100%';
+        
+        document.getElementById('final-score').innerText = `${score}/${questions.length}`;
+        
+        const titleEl = document.getElementById('result-title');
+        const msgEl = document.getElementById('result-message');
+        
+        if(score === 50) {
+            titleEl.innerText = "Grão-Mestre da Cozinha Mundial!";
+            msgEl.innerText = "Incrível! Demonstras um conhecimento impecável das técnicas de todas as regiões: woks asiáticas, purés europeus, especiarias indianas, natas, caril, óleo de palma e leite de coco de África.";
+        } else if(score >= 40) {
+            titleEl.innerText = "Excelente Cozinheiro!";
+            msgEl.innerText = "Ótima pontuação! Compreendes perfeitamente a lógica dos processos e técnicas de cozedura e escorregas apenas em pequenos detalhes pontuais.";
+        } else {
+            titleEl.innerText = "Precisa voltar para os tachos...";
+            msgEl.innerText = "A culinária mundial exige precisão absoluta. Reveja os processos de cozedura, emulsão, marinadas e controlo térmico das gorduras.";
+        }
+    }
+</script>
+
+</body>
+</html>
